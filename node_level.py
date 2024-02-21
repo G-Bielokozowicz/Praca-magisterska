@@ -48,7 +48,7 @@ print()
 
 data = dataset[0]  # Get the first graph object.
 
-
+data=data.to(device)
 # print()
 # print(data)
 # print('===========================================================================================================')
@@ -116,6 +116,7 @@ class MLP(torch.nn.Module):
 class GCN(torch.nn.Module):
     def __init__(self, hidden_channels):
         super().__init__()
+        torch.manual_seed(74873)
         self.conv1 = GCNConv(dataset.num_features, hidden_channels)
         self.conv2 = GCNConv(hidden_channels, dataset.num_classes)
 
@@ -139,7 +140,7 @@ def train(_model, _optimizer):
 
 def test(_model):
     _model.eval()
-    out = model(data.x, data.edge_index)
+    out = model(data.x, data.edge_index).to(device)
     pred = out.argmax(dim=1)  # Use the class with highest probability.
     test_correct = pred[data.test_mask] == data.y[data.test_mask]  # Check against ground-truth labels.
     test_acc = int(test_correct.sum()) / int(data.test_mask.sum())  # Derive ratio of correct predictions.

@@ -90,7 +90,6 @@ def train():
 
 def test(loader):
     model.eval()
-
     correct = 0
     for data in loader:  # Iterate in batches over the training/test dataset.
         out = model(data.x, data.edge_index, data.batch)
