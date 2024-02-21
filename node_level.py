@@ -72,7 +72,6 @@ class MLP(torch.nn.Module):
     def forward(self, x):
         x = self.lin1(x)
         x = x.relu()
-        x = F.dropout(x, p=0.5, training=self.training)
         x = self.lin2(x)
         return x
 
@@ -158,11 +157,10 @@ if __name__ == "__main__":
 
     hidden_channels_list = [16, 32, 64]
     learning_rate_list = [0.001, 0.01, 0.05, 0.1, 0.2, 0.3]
-    weight_decay_list = [1e-4, 5e-4, 1e-2, 5e-2]
+    weight_decay_list = [1e-4, 5e-4]
     num_epochs_list = [100, 200, 300, 500, 700]
     all_parameters_combination = list(
         itertools.product(hidden_channels_list, learning_rate_list, weight_decay_list, num_epochs_list))
-
     file_name = 'results_node_level.csv'
     with open(file_name, 'w', newline='') as file:
         writer = csv.writer(file, delimiter=";")
@@ -174,9 +172,7 @@ if __name__ == "__main__":
             optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
             for epoch in range(num_epochs):  # Trenowanie
                 loss = train(_model=model, _optimizer=optimizer)
-
             test_acc = test(_model=model)  # Testowanie
-
             print(
                 f'Index: {index}, Hidden channels: {hidden_channels}, Learning rate: {learning_rate}, Weight decay: {weight_decay}, '
                 f'Number of epochs: {num_epochs}, Test Accuracy: {test_acc}')
