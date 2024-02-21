@@ -1,0 +1,2 @@
+index;hidden_channels;learning_rate;weight_decay;num_epochs;test_accuracy
+0;16;0.001;0.0001;100;0.744
