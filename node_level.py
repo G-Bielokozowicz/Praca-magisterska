@@ -122,6 +122,7 @@ class GCN(torch.nn.Module):
     def forward(self, x, edge_index):
         x = self.conv1(x, edge_index)
         x = x.relu()
+        #print(x) # x to embedding, wiec to wypisuje ten embedding
         x = self.conv2(x, edge_index)
         return x
 
