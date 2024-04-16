@@ -77,6 +77,7 @@ class GCN(torch.nn.Module):
         x = self.lin(x)
         return x
 
+
 #
 # model = GCN(hidden_channels=64)
 # model = model.to(device)
@@ -108,32 +109,57 @@ def test(loader, _model):
 if __name__ == "__main__":
 
     hidden_channels_list = [16, 32, 64]
-    learning_rate_list = [0.001, 0.01, 0.05, 0.1, 0.2, 0.3]
+<<<<<<< Updated upstream
+    learning_rate_list = [0.001]
     weight_decay_list = [1e-4, 5e-4]
     num_epochs_list = [100, 200, 300, 500, 700]
+=======
+    learning_rate_list = [0.001, 0.01, 0.1]
+    weight_decay_list = [0.01, 0.001, 0.0001]
+    num_epochs_list = [100, 200, 300, 500, ]
+>>>>>>> Stashed changes
     all_parameters_combination = list(
         itertools.product(hidden_channels_list, learning_rate_list, weight_decay_list, num_epochs_list))
 
-    file_name = 'results_graph_level.csv'
-    with open(file_name, 'w', newline='') as file:
-        writer = csv.writer(file, delimiter=";")
-        writer.writerow(["index", "hidden_channels", "learning_rate", "weight_decay", "num_epochs", "test_accuracy"])
-        for index, parameters in enumerate(all_parameters_combination):
-            hidden_channels, learning_rate, weight_decay, num_epochs = parameters  # Ustawienie parametrow
-            model = GCN(hidden_channels=hidden_channels)
-            model = model.to(device)
-            optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
-            for epoch in range(num_epochs):  # Trenowanie
-                loss = train(_model=model, _optimizer=optimizer)
-            test_acc = test(test_loader,model)
-            print(
-                f'Index: {index}, Hidden channels: {hidden_channels}, Learning rate: {learning_rate}, Weight decay: {weight_decay}, '
-                f'Number of epochs: {num_epochs}, Test Accuracy: {test_acc}')
-            writer.writerow([index, hidden_channels, learning_rate, weight_decay, num_epochs,
-                             test_acc])  # Zapisanie wyników do pliku
+    save_to_file = True
+    multiple = True
 
-    # for epoch in range(1, 200):
-    #     train()
-    #     train_acc = test(train_loader)
-    #     test_acc = test(test_loader)
-    #     print(f'Epoch: {epoch:03d}, Train Acc: {train_acc:.4f}, Test Acc: {test_acc:.4f}')
+    if multiple:
+        if save_to_file:
+            file_name = 'results_graph_level_new.csv'
+            with open(file_name, 'w', newline='') as file:
+                writer = csv.writer(file, delimiter=";")
+                writer.writerow(
+                    ["index", "hidden_channels", "learning_rate", "weight_decay", "num_epochs", "test_accuracy"])
+                for index, parameters in enumerate(all_parameters_combination):
+                    hidden_channels, learning_rate, weight_decay, num_epochs = parameters  # Ustawienie parametrow
+                    model = GCN(hidden_channels=hidden_channels)
+                    model = model.to(device)
+                    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
+                    for epoch in range(num_epochs):  # Trenowanie
+                        loss = train(_model=model, _optimizer=optimizer)
+                    test_acc = test(test_loader, model)
+                    print(
+                        f'Index: {index}, Hidden channels: {hidden_channels}, Learning rate: {learning_rate}, Weight decay: {weight_decay}, '
+                        f'Number of epochs: {num_epochs}, Test Accuracy: {test_acc}')
+                    writer.writerow([index, hidden_channels, learning_rate, weight_decay, num_epochs,
+                                     test_acc])  # Zapisanie wyników do pliku
+        else:
+            for index, parameters in enumerate(all_parameters_combination):
+                hidden_channels, learning_rate, weight_decay, num_epochs = parameters  # Ustawienie parametrow
+                model = GCN(hidden_channels=hidden_channels)
+                model = model.to(device)
+                optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
+                for epoch in range(num_epochs):  # Trenowanie
+                    loss = train(_model=model, _optimizer=optimizer)
+                test_acc = test(test_loader, model)
+                print(
+                    f'Index: {index}, Hidden channels: {hidden_channels}, Learning rate: {learning_rate}, Weight decay: {weight_decay}, '
+                    f'Number of epochs: {num_epochs}, Test Accuracy: {test_acc}')
+
+    else:
+        for epoch in range(1, 200):
+            train()
+            train_acc = test(train_loader)
+            test_acc = test(test_loader)
+            print(f'Epoch: {epoch:03d}, Train Acc: {train_acc:.4f}, Test Acc: {test_acc:.4f}')

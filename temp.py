@@ -62,8 +62,8 @@ all_nodes = list(G.nodes())
 
 random_walks = []
 for n in tqdm(all_nodes):
-    for i in range(10):
-        random_walks.append(get_randomwalk(n, 10))
+    for i in range(50):
+        random_walks.append(get_randomwalk(n, 3))
 
 
 
@@ -76,7 +76,7 @@ model = Word2Vec(window = 4, sg = 1, hs = 0,
 
 model.build_vocab(random_walks, progress_per=2)
 
-model.train(random_walks, total_examples = model.corpus_count, epochs=20, report_delay=1)
+model.train(random_walks, total_examples = model.corpus_count, epochs=100, report_delay=1)
 
 print(model.wv.most_similar(positive=[1]))
 
@@ -95,5 +95,28 @@ def plot_nodes(word_list):
 
     plt.show()
 
+
+from sklearn.manifold import TSNE
+
+def visualize_embeddings(model):
+    # Get the embeddings from the model
+    embeddings = model.wv.vectors
+
+    # Use t-SNE to reduce the dimensionality of the embeddings to 2
+    tsne = TSNE(n_components=2, perplexity=5,random_state=42)
+    reduced_embeddings = tsne.fit_transform(embeddings)
+
+    # Create a scatter plot of the reduced embeddings
+    plt.figure(figsize=(10, 10))
+    plt.scatter(reduced_embeddings[:, 0], reduced_embeddings[:, 1])
+
+    # Annotate the points with their corresponding words
+    for i, word in enumerate(model.wv.index_to_key):
+        plt.annotate(word, xy=(reduced_embeddings[i, 0], reduced_embeddings[i, 1]))
+
+    plt.show()
+
+
 terms = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
-plot_nodes(terms)
+#plot_nodes(terms)
+visualize_embeddings(model)

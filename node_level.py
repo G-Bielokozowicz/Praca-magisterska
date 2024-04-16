@@ -16,8 +16,9 @@ from torch.nn import Linear
 import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE
 
-import torch
 
+print(torch.__version__)
+print(torch.version.cuda)
 # Sprawdzenie dostępności GPU
 if torch.cuda.is_available():
     print("GPU dostępne")
@@ -31,9 +32,11 @@ else:
 def visualize(h, color):
     z = TSNE(n_components=2).fit_transform(h.detach().cpu().numpy())
 
+    color = color.cpu()
+
     plt.figure(figsize=(10, 10))
-    plt.xticks([])
-    plt.yticks([])
+    #plt.xticks([])
+    #plt.yticks([])
 
     plt.scatter(z[:, 0], z[:, 1], s=70, c=color, cmap="Set2")
     plt.show()
@@ -48,7 +51,9 @@ print()
 
 data = dataset[0]  # Get the first graph object.
 
-data=data.to(device)
+data = data.to(device)
+
+
 # print()
 # print(data)
 # print('===========================================================================================================')
@@ -122,7 +127,7 @@ class GCN(torch.nn.Module):
     def forward(self, x, edge_index):
         x = self.conv1(x, edge_index)
         x = x.relu()
-        #print(x) # x to embedding, wiec to wypisuje ten embedding
+        # print(x) # x to embedding, wiec to wypisuje ten embedding
         x = self.conv2(x, edge_index)
         return x
 
@@ -148,6 +153,7 @@ def test(_model):
 
 
 if __name__ == "__main__":
+
     # hidden_channels = 32
     # learning_rate = 0.01
     # weight_decay = 5e-4
@@ -156,30 +162,58 @@ if __name__ == "__main__":
     # optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
     criterion = torch.nn.CrossEntropyLoss()
 
-    hidden_channels_list = [16, 32, 64]
-    learning_rate_list = [0.001, 0.01, 0.05, 0.1, 0.2, 0.3]
-    weight_decay_list = [1e-4, 5e-4]
-    num_epochs_list = [100, 200, 300, 500, 700]
+    save_to_file = True
+    multiple = True
+    hidden_channels_list = [32]
+    learning_rate_list = [0.01]
+    weight_decay_list = [0.0001]
+    num_epochs_list = [50,100,150,200,250,300,350,400,450,500,600,700,800,900,1000,1500,2000,3000,4000]
     all_parameters_combination = list(
         itertools.product(hidden_channels_list, learning_rate_list, weight_decay_list, num_epochs_list))
-    file_name = 'results_node_level.csv'
-    with open(file_name, 'w', newline='') as file:
-        writer = csv.writer(file, delimiter=";")
-        writer.writerow(["index", "hidden_channels", "learning_rate", "weight_decay", "num_epochs", "test_accuracy"])
-        for index, parameters in enumerate(all_parameters_combination):
-            hidden_channels, learning_rate, weight_decay, num_epochs = parameters  # Ustawienie parametrow
-            model = GCN(hidden_channels=hidden_channels)
-            model = model.to(device)
-            optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
-            for epoch in range(num_epochs):  # Trenowanie
-                loss = train(_model=model, _optimizer=optimizer)
-            test_acc = test(_model=model)  # Testowanie
-            print(
-                f'Index: {index}, Hidden channels: {hidden_channels}, Learning rate: {learning_rate}, Weight decay: {weight_decay}, '
-                f'Number of epochs: {num_epochs}, Test Accuracy: {test_acc}')
-            writer.writerow([index, hidden_channels, learning_rate, weight_decay, num_epochs,
-                             test_acc])  # Zapisanie wyników do pliku
 
-    # model.eval()
-#   out = model(data.x, data.edge_index)
-#   visualize(out, color=data.y)
+    if multiple:
+        if save_to_file:
+            file_name = 'results_node_level_for_epochs2.csv'
+            with open(file_name, 'w', newline='') as file:
+                writer = csv.writer(file, delimiter=";")
+                writer.writerow(["index", "hidden_channels", "learning_rate", "weight_decay", "num_epochs", "test_accuracy"])
+                for index, parameters in enumerate(all_parameters_combination):
+                    hidden_channels, learning_rate, weight_decay, num_epochs = parameters  # Ustawienie parametrow
+                    model = GCN(hidden_channels=hidden_channels)
+                    model = model.to(device)
+                    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
+                    for epoch in range(num_epochs):  # Trenowanie
+                        loss = train(_model=model, _optimizer=optimizer)
+                    test_acc = test(_model=model)  # Testowanie
+                    print(
+                        f'Index: {index}, Hidden channels: {hidden_channels}, Learning rate: {learning_rate}, Weight decay: {weight_decay}, '
+                        f'Number of epochs: {num_epochs}, Test Accuracy: {test_acc}')
+                    writer.writerow([index, hidden_channels, learning_rate, weight_decay, num_epochs,
+                                     test_acc])  # Zapisanie wyników do pliku
+        else:
+            for index, parameters in enumerate(all_parameters_combination):
+                hidden_channels, learning_rate, weight_decay, num_epochs = parameters  # Ustawienie parametrow
+                model = GCN(hidden_channels=hidden_channels)
+                model = model.to(device)
+                optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
+                for epoch in range(num_epochs):  # Trenowanie
+                    loss = train(_model=model, _optimizer=optimizer)
+                test_acc = test(_model=model)  # Testowanie
+
+                print(
+                    f'Index: {index}, Hidden channels: {hidden_channels}, Learning rate: {learning_rate}, Weight decay: {weight_decay}, '
+                    f'Number of epochs: {num_epochs}, Test Accuracy: {test_acc}')
+    else:
+        hidden_channels = 64
+        learning_rate = 0.001
+        weight_decay = 0.001
+        num_epochs = 500
+        model = GCN(hidden_channels=hidden_channels)
+        model = model.to(device)
+        optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
+        for epoch in range(num_epochs):  # Trenowanie
+            loss = train(_model=model, _optimizer=optimizer)
+        test_acc = test(_model=model)  # Testowanie
+        model.eval()
+        out = model(data.x, data.edge_index)
+        visualize(out, color=data.y)
