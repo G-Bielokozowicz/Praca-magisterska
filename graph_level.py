@@ -108,16 +108,12 @@ def test(loader, _model):
 
 if __name__ == "__main__":
 
-    hidden_channels_list = [16, 32, 64]
-<<<<<<< Updated upstream
-    learning_rate_list = [0.001]
-    weight_decay_list = [1e-4, 5e-4]
-    num_epochs_list = [100, 200, 300, 500, 700]
-=======
-    learning_rate_list = [0.001, 0.01, 0.1]
-    weight_decay_list = [0.01, 0.001, 0.0001]
-    num_epochs_list = [100, 200, 300, 500, ]
->>>>>>> Stashed changes
+    hidden_channels_list = [8,16, 32, 64]
+    learning_rate_list = [0.001, ]
+    weight_decay_list = [0.001]
+    num_epochs_list = [200]
+
+
     all_parameters_combination = list(
         itertools.product(hidden_channels_list, learning_rate_list, weight_decay_list, num_epochs_list))
 
@@ -126,7 +122,7 @@ if __name__ == "__main__":
 
     if multiple:
         if save_to_file:
-            file_name = 'results_graph_level_new.csv'
+            file_name = 'results_graph_level_new2.csv'
             with open(file_name, 'w', newline='') as file:
                 writer = csv.writer(file, delimiter=";")
                 writer.writerow(
