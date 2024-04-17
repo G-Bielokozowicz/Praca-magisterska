@@ -7,6 +7,7 @@ from torch_geometric.datasets import Planetoid
 from torch_geometric.transforms import NormalizeFeatures
 from torch_geometric.nn import GCNConv
 import csv
+import argparse
 
 dataset = Planetoid(root='data/Planetoid', name='Cora', transform=NormalizeFeatures())
 
@@ -16,7 +17,6 @@ from torch.nn import Linear
 import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE
 
-
 print(torch.__version__)
 print(torch.version.cuda)
 # Sprawdzenie dostępności GPU
@@ -24,6 +24,7 @@ if torch.cuda.is_available():
     print("GPU dostępne")
     device = torch.device("cuda")
     print("Nazwa GPU:", torch.cuda.get_device_name(0))
+
 else:
     print("GPU niedostępne")
     device = torch.device("cpu")
@@ -35,14 +36,13 @@ def visualize(h, color):
     color = color.cpu()
 
     plt.figure(figsize=(10, 10))
-    #plt.xticks([])
-    #plt.yticks([])
+    # plt.xticks([])
+    # plt.yticks([])
 
     plt.scatter(z[:, 0], z[:, 1], s=70, c=color, cmap="Set2")
     plt.show()
 
 
-print()
 # print(f'Dataset: {dataset}:')
 # print('======================')
 # print(f'Number of graphs: {len(dataset)}')
@@ -67,18 +67,18 @@ data = data.to(device)
 # print(f'Has isolated nodes: {data.has_isolated_nodes()}')
 # print(f'Has self-loops: {data.has_self_loops()}')
 # print(f'Is undirected: {data.is_undirected()}')
-
-class MLP(torch.nn.Module):
-    def __init__(self, hidden_channels):
-        super().__init__()
-        self.lin1 = Linear(dataset.num_features, hidden_channels)
-        self.lin2 = Linear(hidden_channels, dataset.num_classes)
-
-    def forward(self, x):
-        x = self.lin1(x)
-        x = x.relu()
-        x = self.lin2(x)
-        return x
+#
+# class MLP(torch.nn.Module):
+#     def __init__(self, hidden_channels):
+#         super().__init__()
+#         self.lin1 = Linear(dataset.num_features, hidden_channels)
+#         self.lin2 = Linear(hidden_channels, dataset.num_classes)
+#
+#     def forward(self, x):
+#         x = self.lin1(x)
+#         x = x.relu()
+#         x = self.lin2(x)
+#         return x
 
 
 #
@@ -154,6 +154,16 @@ def test(_model):
 
 if __name__ == "__main__":
 
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument('-saveToFile',required=False,default=False)
+    # parser.add_argument('-fileName', required=False,default="node_level_results.txt")
+    # parser.add_argument('-hiddenChannels',required=False,default=[32])
+    # parser.add_argument('-learningRate',required=False,default=[0.001])
+    # parser.add_argument('-weightDecay',required=False,default=[0.01])
+    # parser.add_argument('-numberOfEpochs',required=False,default=[300])
+    # parser.add_argument('-drawEmbeddings',required=False,default=False)
+    # args = parser.parse_args()
+
     # hidden_channels = 32
     # learning_rate = 0.01
     # weight_decay = 5e-4
@@ -162,21 +172,27 @@ if __name__ == "__main__":
     # optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
     criterion = torch.nn.CrossEntropyLoss()
 
-    save_to_file = True
-    multiple = True
-    hidden_channels_list = [32]
-    learning_rate_list = [0.01]
-    weight_decay_list = [0.0001]
-    num_epochs_list = [50,100,150,200,250,300,350,400,450,500,600,700,800,900,1000,1500,2000,3000,4000]
+    # Parametry do zmieniania --------------
+    draw_embeddings = True  # True/False - czy tworzyć wizualiację zanurzenia, działa tylko w przypadku gdy trenowana jest jedna sieć (multiple=False)
+    multiple = False  # True/False - czy wytrenować wiele sieci na kombinacjach parametrów. Jeżeli trenowana jest tylko jedna siec, jej parametry to pierwsze wartości w tabelach poniżej
+    save_to_file = False  # True/False - czy wyniki wielu testów do pliku
+    file_name = 'results_node_level_new.csv'  # Nazwa pliku do którego zapisać wyniki
+    hidden_channels_list = [16, 32, 64]
+    learning_rate_list = [0.001, 0.01, 0.05, 0.1, 0.2]
+    weight_decay_list = [0.0001, 0.001, 0.01, 0.1]
+    num_epochs_list = [700, 500, 300, 100]
+    # -----------------------------------------
+
     all_parameters_combination = list(
         itertools.product(hidden_channels_list, learning_rate_list, weight_decay_list, num_epochs_list))
 
     if multiple:
         if save_to_file:
-            file_name = 'results_node_level_for_epochs2.csv'
+
             with open(file_name, 'w', newline='') as file:
                 writer = csv.writer(file, delimiter=";")
-                writer.writerow(["index", "hidden_channels", "learning_rate", "weight_decay", "num_epochs", "test_accuracy"])
+                writer.writerow(
+                    ["index", "hidden_channels", "learning_rate", "weight_decay", "num_epochs", "test_accuracy"])
                 for index, parameters in enumerate(all_parameters_combination):
                     hidden_channels, learning_rate, weight_decay, num_epochs = parameters  # Ustawienie parametrow
                     model = GCN(hidden_channels=hidden_channels)
@@ -204,16 +220,18 @@ if __name__ == "__main__":
                     f'Index: {index}, Hidden channels: {hidden_channels}, Learning rate: {learning_rate}, Weight decay: {weight_decay}, '
                     f'Number of epochs: {num_epochs}, Test Accuracy: {test_acc}')
     else:
-        hidden_channels = 64
-        learning_rate = 0.001
-        weight_decay = 0.001
-        num_epochs = 500
+        hidden_channels = hidden_channels_list[0]
+        learning_rate = learning_rate_list[0]
+        weight_decay = weight_decay_list[0]
+        num_epochs = num_epochs_list[0]
         model = GCN(hidden_channels=hidden_channels)
         model = model.to(device)
         optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
         for epoch in range(num_epochs):  # Trenowanie
             loss = train(_model=model, _optimizer=optimizer)
         test_acc = test(_model=model)  # Testowanie
-        model.eval()
-        out = model(data.x, data.edge_index)
-        visualize(out, color=data.y)
+        print(f'Accuracy: {test_acc}')
+        if draw_embeddings:
+            model.eval()
+            out = model(data.x, data.edge_index)
+            visualize(out, color=data.y)

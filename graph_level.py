@@ -34,11 +34,13 @@ else:
 # print(f'Has isolated nodes: {data.has_isolated_nodes()}')
 # print(f'Has self-loops: {data.has_self_loops()}')
 # print(f'Is undirected: {data.is_undirected()}')
+
+
 dataset = dataset.to(device)
 dataset = dataset.shuffle()
 
 train_dataset = dataset[:150]
-test_dataset = dataset[150:]
+test_dataset = dataset[38:]
 
 # print(f'Number of training graphs: {len(train_dataset)}')
 # print(f'Number of test graphs: {len(test_dataset)}')
@@ -74,18 +76,14 @@ class GCN(torch.nn.Module):
         x = x.relu()
         x = self.conv2(x, edge_index)
         x = global_mean_pool(x, batch)  # [batch_size, hidden_channels]
+        x = F.dropout(x, p=0.5, training=self.training)
         x = self.lin(x)
         return x
 
 
-#
-# model = GCN(hidden_channels=64)
-# model = model.to(device)
-# optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
 criterion = torch.nn.CrossEntropyLoss()
 
 
-# Dla grafowej
 def train(_model, _optimizer):
     _model.train()
     for data in train_loader:  # Iterate in batches over the training dataset.
@@ -108,21 +106,20 @@ def test(loader, _model):
 
 if __name__ == "__main__":
 
-    hidden_channels_list = [8,16, 32, 64]
-    learning_rate_list = [0.001, ]
-    weight_decay_list = [0.001]
-    num_epochs_list = [200]
-
+    # Parametry do zmieniania --------------
+    multiple = False  # True/False - czy wytrenować wiele sieci na kombinacjach parametrów. Jeżeli trenowana jest tylko jedna siec, jej parametry to pierwsze wartości w tabelach poniżej
+    save_to_file = False  # True/False - czy wyniki wielu testów do pliku
+    file_name = 'results_graph_level_new.csv'  # Nazwa pliku do którego zapisać wyniki
+    hidden_channels_list = [16, 32, 64]
+    learning_rate_list = [0.001, 0.01, 0.05, 0.1, 0.2]
+    weight_decay_list = [0.0001, 0.001, 0.01, 0.1]
+    num_epochs_list = [700, 500, 300, 100]
 
     all_parameters_combination = list(
         itertools.product(hidden_channels_list, learning_rate_list, weight_decay_list, num_epochs_list))
 
-    save_to_file = True
-    multiple = True
-
     if multiple:
         if save_to_file:
-            file_name = 'results_graph_level_new2.csv'
             with open(file_name, 'w', newline='') as file:
                 writer = csv.writer(file, delimiter=";")
                 writer.writerow(
@@ -154,8 +151,16 @@ if __name__ == "__main__":
                     f'Number of epochs: {num_epochs}, Test Accuracy: {test_acc}')
 
     else:
-        for epoch in range(1, 200):
-            train()
-            train_acc = test(train_loader)
-            test_acc = test(test_loader)
-            print(f'Epoch: {epoch:03d}, Train Acc: {train_acc:.4f}, Test Acc: {test_acc:.4f}')
+        hidden_channels = hidden_channels_list[0]
+        learning_rate = learning_rate_list[0]
+        weight_decay = weight_decay_list[0]
+        num_epochs = num_epochs_list[0]
+        model = GCN(hidden_channels=hidden_channels)
+        model = model.to(device)
+        optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
+        for epoch in range(num_epochs):  # Trenowanie
+            loss = train(_model=model, _optimizer=optimizer)
+        test_acc = test(test_loader, model)
+        print(
+            f'Hidden channels: {hidden_channels}, Learning rate: {learning_rate}, Weight decay: {weight_decay}, '
+            f'Number of epochs: {num_epochs}, Test Accuracy: {test_acc}')
