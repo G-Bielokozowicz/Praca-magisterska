@@ -37,10 +37,11 @@ G.add_nodes_from(vertices)
 G.add_edges_from(edges)
 
 # Draw the graph
-#nx.draw(G, with_labels=True)
+print("graph 1")
+nx.draw(G, with_labels=True)
 
 # Display the graph
-#plt.show()
+plt.show()
 
 def get_randomwalk(node, path_length):
     random_walk = [node]
@@ -119,4 +120,27 @@ def visualize_embeddings(model):
 
 terms = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
 #plot_nodes(terms)
-visualize_embeddings(model)
+#visualize_embeddings(model)
+
+embeddings = model.wv.vectors
+print(embeddings)
+
+from sklearn.metrics.pairwise import cosine_similarity
+similarity_matrix = cosine_similarity(embeddings)
+
+G_reconstructed = nx.Graph()
+# Add nodes
+for i in range(embeddings.shape[0]):
+    G_reconstructed.add_node(i)
+
+# Add edges based on similarity
+for i in range(similarity_matrix.shape[0]):
+    for j in range(i+1, similarity_matrix.shape[1]):
+        # You can add a threshold to control which edges are added
+        if similarity_matrix[i, j] > 0.8:
+            G_reconstructed.add_edge(i, j)
+
+
+# Now G_reconstructed is a graph reconstructed from the embeddings
+nx.draw(G_reconstructed, with_labels=True)
+plt.show()

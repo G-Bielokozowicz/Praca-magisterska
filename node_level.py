@@ -7,7 +7,7 @@ from torch_geometric.datasets import Planetoid
 from torch_geometric.transforms import NormalizeFeatures
 from torch_geometric.nn import GCNConv
 import csv
-import argparse
+
 
 dataset = Planetoid(root='data/Planetoid', name='Cora', transform=NormalizeFeatures())
 
@@ -154,22 +154,6 @@ def test(_model):
 
 if __name__ == "__main__":
 
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument('-saveToFile',required=False,default=False)
-    # parser.add_argument('-fileName', required=False,default="node_level_results.txt")
-    # parser.add_argument('-hiddenChannels',required=False,default=[32])
-    # parser.add_argument('-learningRate',required=False,default=[0.001])
-    # parser.add_argument('-weightDecay',required=False,default=[0.01])
-    # parser.add_argument('-numberOfEpochs',required=False,default=[300])
-    # parser.add_argument('-drawEmbeddings',required=False,default=False)
-    # args = parser.parse_args()
-
-    # hidden_channels = 32
-    # learning_rate = 0.01
-    # weight_decay = 5e-4
-    # num_epochs = 300
-    # model = GCN(hidden_channels=hidden_channels)
-    # optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
     criterion = torch.nn.CrossEntropyLoss()
 
     # Parametry do zmieniania --------------
@@ -177,10 +161,10 @@ if __name__ == "__main__":
     multiple = False  # True/False - czy wytrenować wiele sieci na kombinacjach parametrów. Jeżeli trenowana jest tylko jedna siec, jej parametry to pierwsze wartości w tabelach poniżej
     save_to_file = False  # True/False - czy wyniki wielu testów do pliku
     file_name = 'results_node_level_new.csv'  # Nazwa pliku do którego zapisać wyniki
-    hidden_channels_list = [16, 32, 64]
-    learning_rate_list = [0.001, 0.01, 0.05, 0.1, 0.2]
-    weight_decay_list = [0.0001, 0.001, 0.01, 0.1]
-    num_epochs_list = [700, 500, 300, 100]
+    hidden_channels_list = [16, 32, 64] # Musi byc w postaci array
+    learning_rate_list = [0.001, 0.01, 0.05, 0.1, 0.2] # Musi byc w postaci array
+    weight_decay_list = [0.0001, 0.001, 0.01, 0.1] # Musi byc w postaci array
+    num_epochs_list = [700, 500, 300, 100] # Musi byc w postaci array
     # -----------------------------------------
 
     all_parameters_combination = list(
